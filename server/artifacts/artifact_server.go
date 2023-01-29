@@ -231,8 +231,8 @@ func (a *ArtifactServer) GetArtifactFile(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *ArtifactServer) getArtifact(w http.ResponseWriter, r *http.Request, isInput bool) {
-	requestPath := strings.SplitN(r.URL.Path, "/", 6)
-	if len(requestPath) != 6 {
+	requestPath := strings.Split(r.URL.Path, "/")
+	if len(requestPath) < 6 {
 		a.httpBadRequestError(w)
 		return
 	}
@@ -240,6 +240,13 @@ func (a *ArtifactServer) getArtifact(w http.ResponseWriter, r *http.Request, isI
 	workflowName := requestPath[3]
 	nodeId := requestPath[4]
 	artifactName := requestPath[5]
+	var fileName *string
+	if len(requestPath) >= 7 { // they included a file path in the URL (not just artifact name)
+		joined := strings.Join(requestPath[6:], "/")
+		// sanitize file name
+		cleanedPath := path.Clean(joined)
+		fileName = &cleanedPath
+	}
 
 	ctx, err := a.gateKeeping(r, types.NamespaceHolder(namespace))
 	if err != nil {
@@ -254,17 +261,85 @@ func (a *ArtifactServer) getArtifact(w http.ResponseWriter, r *http.Request, isI
 		a.httpFromError(err, w)
 		return
 	}
-	art, driver, err := a.getArtifactAndDriver(ctx, nodeId, artifactName, isInput, wf, nil)
+	artifact, driver, err := a.getArtifactAndDriver(ctx, nodeId, artifactName, isInput, wf, fileName)
 	if err != nil {
 		a.serverInternalError(err, w)
 		return
 	}
 
-	err = a.returnArtifact(w, art, driver)
+	isDir := strings.HasSuffix(r.URL.Path, "/")
 
-	if err != nil {
-		a.httpFromError(err, w)
-		return
+	if !isDir {
+		isDir, err := driver.IsDirectory(artifact)
+		if err != nil {
+			if !argoerrors.IsCode(argoerrors.CodeNotImplemented, err) {
+				a.serverInternalError(err, w)
+				return
+			}
+		}
+		if isDir {
+			http.Redirect(w, r, r.URL.String()+"/", http.StatusTemporaryRedirect)
+			return
+		}
+	}
+
+	if isDir {
+		// return an html page to the user
+
+		objects, err := driver.ListObjects(artifact)
+		if err != nil {
+			a.httpFromError(err, w)
+			return
+		}
+		log.Debugf("this is a directory, artifact: %+v; files: %v", artifact, objects)
+
+		key, _ := artifact.GetKey()
+		for _, object := range objects {
+
+			// object is prefixed by the key, we must trim it
+			dir, file := path.Split(strings.TrimPrefix(object, key+"/"))
+
+			// if dir is empty string, we are in the root dir
+			// we found in index.html, abort and redirect there
+			if dir == "" && file == "index.html" {
+				w.Header().Set("Location", r.URL.String()+"index.html")
+				w.WriteHeader(http.StatusTemporaryRedirect)
+				return
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("<html><body><ul>\n"))
+
+		dirs := map[string]bool{} // to de-dupe sub-dirs
+
+		_, _ = w.Write([]byte(fmt.Sprintf("<li><a href=\"%s\">%s</a></li>\n", "..", "..")))
+
+		for _, object := range objects {
+
+			// object is prefixed the key, we must trim it
+			dir, file := path.Split(strings.TrimPrefix(object, key+"/"))
+
+			// if dir is empty string, we are in the root dir
+			if dir == "" {
+				_, _ = w.Write([]byte(fmt.Sprintf("<li><a href=\"%s\">%s</a></li>\n", file, file)))
+			} else if dirs[dir] {
+				continue
+			} else {
+				_, _ = w.Write([]byte(fmt.Sprintf("<li><a href=\"%s\">%s</a></li>\n", dir, dir)))
+				dirs[dir] = true
+			}
+		}
+		_, _ = w.Write([]byte("</ul></body></html>"))
+
+	} else { // stream the file itself
+		log.Debugf("not a directory, artifact: %+v", artifact)
+
+		err = a.returnArtifact(w, artifact, driver)
+
+		if err != nil {
+			a.httpFromError(err, w)
+		}
 	}
 }
 
@@ -277,14 +352,21 @@ func (a *ArtifactServer) GetInputArtifactByUID(w http.ResponseWriter, r *http.Re
 }
 
 func (a *ArtifactServer) getArtifactByUID(w http.ResponseWriter, r *http.Request, isInput bool) {
-	requestPath := strings.SplitN(r.URL.Path, "/", 5)
-	if len(requestPath) != 5 {
+	requestPath := strings.Split(r.URL.Path, "/")
+	if len(requestPath) < 5 {
 		a.httpBadRequestError(w)
 		return
 	}
 	uid := requestPath[2]
 	nodeId := requestPath[3]
 	artifactName := requestPath[4]
+	var fileName *string
+	if len(requestPath) >= 6 { // they included a file path in the URL (not just artifact name)
+		joined := strings.Join(requestPath[5:], "/")
+		// sanitize file name
+		cleanedPath := path.Clean(joined)
+		fileName = &cleanedPath
+	}
 
 	// We need to know the namespace before we can do gate keeping
 	wf, err := a.wfArchive.GetWorkflow(uid)
@@ -305,7 +387,7 @@ func (a *ArtifactServer) getArtifactByUID(w http.ResponseWriter, r *http.Request
 		a.unauthorizedError(w)
 		return
 	}
-	art, driver, err := a.getArtifactAndDriver(ctx, nodeId, artifactName, isInput, wf, nil)
+	artifact, driver, err := a.getArtifactAndDriver(ctx, nodeId, artifactName, isInput, wf, fileName)
 	if err != nil {
 		a.serverInternalError(err, w)
 		return
@@ -313,11 +395,79 @@ func (a *ArtifactServer) getArtifactByUID(w http.ResponseWriter, r *http.Request
 
 	log.WithFields(log.Fields{"uid": uid, "nodeId": nodeId, "artifactName": artifactName, "isInput": isInput}).Info("Download artifact")
 
-	err = a.returnArtifact(w, art, driver)
+	isDir := strings.HasSuffix(r.URL.Path, "/")
 
-	if err != nil {
-		a.httpFromError(err, w)
-		return
+	if !isDir {
+		isDir, err := driver.IsDirectory(artifact)
+		if err != nil {
+			if !argoerrors.IsCode(argoerrors.CodeNotImplemented, err) {
+				a.serverInternalError(err, w)
+				return
+			}
+		}
+		if isDir {
+			http.Redirect(w, r, r.URL.String()+"/", http.StatusTemporaryRedirect)
+			return
+		}
+	}
+
+	if isDir {
+		// return an html page to the user
+
+		objects, err := driver.ListObjects(artifact)
+		if err != nil {
+			a.httpFromError(err, w)
+			return
+		}
+		log.Debugf("this is a directory, artifact: %+v; files: %v", artifact, objects)
+
+		key, _ := artifact.GetKey()
+		for _, object := range objects {
+
+			// object is prefixed by the key, we must trim it
+			dir, file := path.Split(strings.TrimPrefix(object, key+"/"))
+
+			// if dir is empty string, we are in the root dir
+			// we found in index.html, abort and redirect there
+			if dir == "" && file == "index.html" {
+				w.Header().Set("Location", r.URL.String()+"index.html")
+				w.WriteHeader(http.StatusTemporaryRedirect)
+				return
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("<html><body><ul>\n"))
+
+		dirs := map[string]bool{} // to de-dupe sub-dirs
+
+		_, _ = w.Write([]byte(fmt.Sprintf("<li><a href=\"%s\">%s</a></li>\n", "..", "..")))
+
+		for _, object := range objects {
+
+			// object is prefixed the key, we must trim it
+			dir, file := path.Split(strings.TrimPrefix(object, key+"/"))
+
+			// if dir is empty string, we are in the root dir
+			if dir == "" {
+				_, _ = w.Write([]byte(fmt.Sprintf("<li><a href=\"%s\">%s</a></li>\n", file, file)))
+			} else if dirs[dir] {
+				continue
+			} else {
+				_, _ = w.Write([]byte(fmt.Sprintf("<li><a href=\"%s\">%s</a></li>\n", dir, dir)))
+				dirs[dir] = true
+			}
+		}
+		_, _ = w.Write([]byte("</ul></body></html>"))
+
+	} else { // stream the file itself
+		log.Debugf("not a directory, artifact: %+v", artifact)
+
+		err = a.returnArtifact(w, artifact, driver)
+
+		if err != nil {
+			a.httpFromError(err, w)
+		}
 	}
 }
 
