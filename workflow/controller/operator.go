@@ -2745,7 +2745,10 @@ func (woc *wfOperationCtx) buildLocalScope(scope *wfScope, prefix string, node *
 	// It may be that the node is a retry node, in which case we want to get the outputs of the last node
 	// in the retry group instead of the retry node itself.
 	if node.Type == wfv1.NodeTypeRetry {
-		node = getChildNodeIndex(node, woc.wf.Status.Nodes, -1)
+		lastChildNode := getChildNodeIndex(node, woc.wf.Status.Nodes, -1)
+		if lastChildNode != nil {
+			node = lastChildNode
+		}
 	}
 
 	if node.ID != "" {

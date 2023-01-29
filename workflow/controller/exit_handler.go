@@ -17,7 +17,9 @@ func (woc *wfOperationCtx) runOnExitNode(ctx context.Context, exitHook *wfv1.Lif
 	outputs := parentNode.Outputs
 	if parentNode.Type == wfv1.NodeTypeRetry {
 		lastChildNode := getChildNodeIndex(parentNode, woc.wf.Status.Nodes, -1)
-		outputs = lastChildNode.Outputs
+		if lastChildNode != nil {
+			outputs = lastChildNode.Outputs
+		}
 	}
 
 	if exitHook != nil && woc.GetShutdownStrategy().ShouldExecute(true) {

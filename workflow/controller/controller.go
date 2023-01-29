@@ -497,7 +497,18 @@ func (wfc *WorkflowController) processNextPodCleanupItem(ctx context.Context) bo
 		pods := wfc.kubeclientset.CoreV1().Pods(namespace)
 		switch action {
 		case terminateContainers:
-			if terminationGracePeriod, err := wfc.signalContainers(namespace, podName, syscall.SIGTERM); err != nil {
+			pod, err := wfc.getPod(namespace, podName)
+			if err == nil && pod != nil && pod.Status.Phase == "Pending" {
+				logCtx.Info("deleting pending pod")
+				err := pods.Delete(
+					ctx,
+					podName,
+					metav1.DeleteOptions{},
+				)
+				if err != nil {
+					return err
+				}
+			} else if terminationGracePeriod, err := wfc.signalContainers(namespace, podName, syscall.SIGTERM); err != nil {
 				return err
 			} else if terminationGracePeriod > 0 {
 				wfc.queuePodForCleanupAfter(namespace, podName, killContainers, terminationGracePeriod)

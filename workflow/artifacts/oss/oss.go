@@ -394,6 +394,20 @@ func ListOssDirectory(bucket *oss.Bucket, objectKey string) (files []string, err
 	return files, nil
 }
 
-func (g *ArtifactDriver) IsDirectory(artifact *wfv1.Artifact) (bool, error) {
-	return false, errors.New(errors.CodeNotImplemented, "IsDirectory currently unimplemented for OSS")
+func (ossDriver *ArtifactDriver) IsDirectory(artifact *wfv1.Artifact) (bool, error) {
+	osscli, err := ossDriver.newOSSClient()
+	if err != nil {
+		return false, err
+	}
+	bucketName := artifact.OSS.Bucket
+	bucket, err := osscli.Bucket(bucketName)
+	if err != nil {
+		return false, err
+	}
+	objectName := artifact.OSS.Key
+	isDir, err := IsOssDirectory(bucket, objectName)
+	if err != nil {
+		return false, err
+	}
+	return isDir, nil
 }
