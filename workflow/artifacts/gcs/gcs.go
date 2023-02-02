@@ -149,7 +149,7 @@ func downloadObject(client *storage.Client, bucket, key, objName, path string) e
 	localPath := filepath.Join(path, relObjPath)
 	objectDir, _ := filepath.Split(localPath)
 	if objectDir != "" {
-		if err := os.MkdirAll(objectDir, 0o700); err != nil {
+		if err := os.MkdirAll(objectDir, 0o755); err != nil {
 			return fmt.Errorf("mkdir %s: %w", objectDir, err)
 		}
 	}

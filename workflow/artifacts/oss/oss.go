@@ -345,14 +345,14 @@ func GetOssDirectory(bucket *oss.Bucket, objectName, path string) error {
 		}
 		fpath := filepath.Join(path, innerName)
 		if strings.HasSuffix(f, "/") {
-			err = os.MkdirAll(fpath, 0o700)
+			err = os.MkdirAll(fpath, 0o755)
 			if err != nil {
 				return fmt.Errorf("mkdir %s error: %w", fpath, err)
 			}
 			continue
 		}
 		dirPath := filepath.Dir(fpath)
-		err = os.MkdirAll(dirPath, 0o700)
+		err = os.MkdirAll(dirPath, 0o755)
 		if err != nil {
 			return fmt.Errorf("mkdir %s error: %w", dirPath, err)
 		}
