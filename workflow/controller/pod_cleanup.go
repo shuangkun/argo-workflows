@@ -24,7 +24,7 @@ func (woc *wfOperationCtx) queuePodsForCleanup() {
 		}
 		nodeID := woc.nodeID(pod)
 		tmpl := woc.wf.GetTemplateByName(woc.execWf.Status.Nodes[nodeID].TemplateName)
-		if !woc.wf.Status.Nodes[nodeID].Phase.Fulfilled() && !failFastDelete(tmpl.FailFast, woc.wf.Status.Phase.Completed()) {
+		if !woc.wf.Status.Nodes[nodeID].Phase.Fulfilled() && !(tmpl != nil && failFastDelete(tmpl.FailFast, woc.wf.Status.Phase.Completed())) {
 			continue
 		}
 		switch determinePodCleanupAction(selector, pod.Labels, strategy, workflowPhase, pod.Status.Phase) {
