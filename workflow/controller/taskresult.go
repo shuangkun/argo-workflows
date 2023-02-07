@@ -40,7 +40,10 @@ func (woc *wfOperationCtx) taskResultReconciliation() {
 	for _, obj := range objs {
 		result := obj.(*wfv1.WorkflowTaskResult)
 		nodeID := result.Name
-		old := woc.wf.Status.Nodes[nodeID]
+		old, ok := woc.wf.Status.Nodes[nodeID]
+		if !ok {
+			continue
+		}
 		new := old.DeepCopy()
 		if result.Outputs.HasOutputs() {
 			if new.Outputs == nil {
