@@ -1729,6 +1729,10 @@ func (woc *wfOperationCtx) executeTemplate(ctx context.Context, nodeName string,
 	if orgTmpl.IsWorkflowStep() {
 		localParams["steps.name"] = orgTmpl.GetName()
 	}
+	localParams["node.name"] = nodeName
+	if node != nil {
+		localParams["node.id"] = node.ID
+	}
 	// Merge Template defaults to template
 	err = woc.mergedTemplateDefaultsInto(resolvedTmpl)
 	if err != nil {
