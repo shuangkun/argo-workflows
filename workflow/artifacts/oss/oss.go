@@ -179,12 +179,21 @@ func (ossDriver *ArtifactDriver) ListObjects(artifact *wfv1.Artifact) ([]string,
 			if err != nil {
 				return !isTransientOSSErr(err), err
 			}
-			results, err := bucket.ListObjectsV2(oss.Prefix(artifact.OSS.Key))
-			if err != nil {
-				return !isTransientOSSErr(err), err
-			}
-			for _, object := range results.Objects {
-				files = append(files, object.Key)
+			pre := oss.Prefix(artifact.OSS.Key)
+			marker := oss.Marker("")
+			for {
+				results, err := bucket.ListObjects(marker, pre)
+				if err != nil {
+					return !isTransientOSSErr(err), err
+				}
+				for _, object := range results.Objects {
+					files = append(files, object.Key)
+				}
+				pre = oss.Prefix(results.Prefix)
+				marker = oss.Marker(results.NextMarker)
+				if !results.IsTruncated {
+					break
+				}
 			}
 			return true, nil
 		})
