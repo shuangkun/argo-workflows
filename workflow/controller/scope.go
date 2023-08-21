@@ -103,7 +103,12 @@ func (s *wfScope) resolveArtifact(art *wfv1.Artifact) (*wfv1.Artifact, error) {
 	}
 	valArt, ok := val.(wfv1.Artifact)
 	if !ok {
-		return nil, errors.Errorf(errors.CodeBadRequest, "Variable {{%v}} is not an artifact", art)
+		ptArt, ok := val.(*wfv1.Artifact)
+		if ok {
+			valArt = *ptArt
+		} else {
+			return nil, errors.Errorf(errors.CodeBadRequest, "Variable {{%v}} is not an artifact", art)
+		}
 	}
 
 	if art.SubPath != "" {
