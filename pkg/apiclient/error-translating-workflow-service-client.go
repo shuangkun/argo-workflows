@@ -100,3 +100,8 @@ func (c *errorTranslatingWorkflowServiceClient) SubmitWorkflow(ctx context.Conte
 	workflow, err := c.delegate.SubmitWorkflow(ctx, req)
 	return workflow, grpcutil.TranslateError(err)
 }
+
+func (c *errorTranslatingWorkflowServiceClient) UpdateWorkflow(ctx context.Context, req *workflowpkg.WorkflowUpdateRequest, opts ...grpc.CallOption) (*v1alpha1.Workflow, error) {
+	workflow, err := c.delegate.UpdateWorkflow(ctx, req)
+	return workflow, grpcutil.TranslateError(err)
+}

@@ -100,3 +100,7 @@ func (o OfflineWorkflowServiceClient) WorkflowLogs(context.Context, *workflowpkg
 func (o OfflineWorkflowServiceClient) SubmitWorkflow(context.Context, *workflowpkg.WorkflowSubmitRequest, ...grpc.CallOption) (*wfv1.Workflow, error) {
 	return nil, OfflineErr
 }
+
+func (o OfflineWorkflowServiceClient) UpdateWorkflow(context.Context, *workflowpkg.WorkflowUpdateRequest, ...grpc.CallOption) (*wfv1.Workflow, error) {
+	return nil, OfflineErr
+}

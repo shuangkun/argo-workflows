@@ -121,3 +121,7 @@ func (c *argoKubeWorkflowServiceClient) WorkflowLogs(ctx context.Context, req *w
 func (c *argoKubeWorkflowServiceClient) SubmitWorkflow(ctx context.Context, req *workflowpkg.WorkflowSubmitRequest, _ ...grpc.CallOption) (*v1alpha1.Workflow, error) {
 	return c.delegate.SubmitWorkflow(ctx, req)
 }
+
+func (c *argoKubeWorkflowServiceClient) UpdateWorkflow(ctx context.Context, req *workflowpkg.WorkflowUpdateRequest, _ ...grpc.CallOption) (*v1alpha1.Workflow, error) {
+	return c.delegate.UpdateWorkflow(ctx, req)
+}

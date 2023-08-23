@@ -107,3 +107,8 @@ func (h WorkflowServiceClient) SubmitWorkflow(_ context.Context, in *workflowpkg
 	out := &wfv1.Workflow{}
 	return out, h.Post(in, out, "/api/v1/workflows/{namespace}/submit")
 }
+
+func (h WorkflowServiceClient) UpdateWorkflow(_ context.Context, in *workflowpkg.WorkflowUpdateRequest, _ ...grpc.CallOption) (*wfv1.Workflow, error) {
+	out := &wfv1.Workflow{}
+	return out, h.Put(in, out, "/api/v1/workflows/{namespace}/{name}")
+}

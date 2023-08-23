@@ -135,6 +135,12 @@ message WorkflowSubmitRequest {
   github.com.argoproj.argo_workflows.v3.pkg.apis.workflow.v1alpha1.SubmitOpts submitOptions = 4;
 }
 
+message WorkflowUpdateRequest {
+  string namespace = 1;
+  string name = 2;
+  github.com.argoproj.argo_workflows.v3.pkg.apis.workflow.v1alpha1.Workflow workflow = 3;
+}
+
 service WorkflowService {
   rpc CreateWorkflow(WorkflowCreateRequest) returns (github.com.argoproj.argo_workflows.v3.pkg.apis.workflow.v1alpha1.Workflow) {
     option (google.api.http) = {
@@ -215,6 +221,13 @@ service WorkflowService {
   rpc LintWorkflow(WorkflowLintRequest) returns (github.com.argoproj.argo_workflows.v3.pkg.apis.workflow.v1alpha1.Workflow) {
     option (google.api.http) = {
       post : "/api/v1/workflows/{namespace}/lint"
+      body : "*"
+    };
+  }
+
+  rpc UpdateWorkflow(WorkflowUpdateRequest) returns (github.com.argoproj.argo_workflows.v3.pkg.apis.workflow.v1alpha1.Workflow) {
+    option (google.api.http) = {
+      put : "/api/v1/workflows/{namespace}/{name}"
       body : "*"
     };
   }

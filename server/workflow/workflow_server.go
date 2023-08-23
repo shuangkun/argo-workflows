@@ -641,3 +641,19 @@ func (s *workflowServer) SubmitWorkflow(ctx context.Context, req *workflowpkg.Wo
 	}
 	return wfClient.ArgoprojV1alpha1().Workflows(req.Namespace).Create(ctx, wf, metav1.CreateOptions{})
 }
+
+func (s *workflowServer) UpdateWorkflow(ctx context.Context, req *workflowpkg.WorkflowUpdateRequest) (*wfv1.Workflow, error) {
+	wfClient := auth.GetWfClient(ctx)
+	wf := req.Workflow
+
+	err := s.hydrator.Dehydrate(wf)
+	if err != nil {
+		return nil, err
+	}
+
+	wf, err = wfClient.ArgoprojV1alpha1().Workflows(req.Namespace).Update(ctx, wf, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return wf, nil
+}
