@@ -642,11 +642,53 @@ func (s *workflowServer) SubmitWorkflow(ctx context.Context, req *workflowpkg.Wo
 	return wfClient.ArgoprojV1alpha1().Workflows(req.Namespace).Create(ctx, wf, metav1.CreateOptions{})
 }
 
-func (s *workflowServer) UpdateWorkflow(ctx context.Context, req *workflowpkg.WorkflowUpdateRequest) (*wfv1.Workflow, error) {
-	wfClient := auth.GetWfClient(ctx)
-	wf := req.Workflow
+func mergeMaps(dst, src map[string]interface{}) {
+	for k, v := range src {
+		if vMap, ok := v.(map[string]interface{}); ok {
+			if dstMap, ok := dst[k].(map[string]interface{}); ok {
+				mergeMaps(dstMap, vMap)
+			} else {
+				dst[k] = v
+			}
+		} else {
+			dst[k] = v
+		}
+	}
+}
 
-	err := s.hydrator.Dehydrate(wf)
+func (s *workflowServer) UpdateWorkflow(ctx context.Context, req *workflowpkg.WorkflowUpdateRequest) (*wfv1.Workflow, error) {
+	var patch map[string]interface{}
+	if err := json.Unmarshal([]byte(req.Patch), &patch); err != nil {
+		return nil, err
+	}
+
+	wfClient := auth.GetWfClient(ctx)
+	wf, err := s.getWorkflow(ctx, wfClient, req.Namespace, req.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	err = s.validateWorkflow(wf)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.hydrator.Hydrate(wf)
+	if err != nil {
+		return nil, err
+	}
+
+	// StrategicMergePatch cannot merge each value of a map
+	wfJson, _ := json.Marshal(wf)
+	var wfMap map[string]interface{}
+	_ = json.Unmarshal(wfJson, &wfMap)
+	mergeMaps(wfMap, patch)
+	wfJson, _ = json.Marshal(wfMap)
+	err = json.Unmarshal(wfJson, &wf)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.hydrator.Dehydrate(wf)
 	if err != nil {
 		return nil, err
 	}
