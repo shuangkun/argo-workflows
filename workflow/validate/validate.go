@@ -1195,9 +1195,9 @@ func (ctx *templateValidationCtx) validateDAG(scope map[string]interface{}, tmpl
 			return errors.Errorf(errors.CodeBadRequest, "templates.%s cannot use both 'depends' and 'dependencies' in the same DAG template", tmpl.Name)
 		}
 
-		if usingDepends && task.ContinueOn != nil {
-			return errors.Errorf(errors.CodeBadRequest, "templates.%s cannot use 'continueOn' when using 'depends'. Instead use 'dep-task.Failed'/'dep-task.Errored'", tmpl.Name)
-		}
+		// if usingDepends && task.ContinueOn != nil {
+		// 	return errors.Errorf(errors.CodeBadRequest, "templates.%s cannot use 'continueOn' when using 'depends'. Instead use 'dep-task.Failed'/'dep-task.Errored'", tmpl.Name)
+		// }
 
 		if !validateWhenExpression(task.When) {
 			return errors.Errorf(errors.CodeBadRequest, "templates.%s when doesn't support 'expr' expression '{{='. 'When' expression is only support govaluate format {{", tmpl.Name)
