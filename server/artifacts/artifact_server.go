@@ -95,7 +95,7 @@ func (a *ArtifactServer) GetArtifactFile(w http.ResponseWriter, r *http.Request)
 	direction := requestPath[directionIndex]
 	artifactName := requestPath[artifactNameIndex]
 
-	if direction != "outputs" { // for now we just handle output artifacts
+	if direction != "outputs" && direction != "inputs" { // for now we handle output and input artifacts
 		a.httpBadRequestError(w)
 		return
 	}
@@ -147,7 +147,12 @@ func (a *ArtifactServer) GetArtifactFile(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	artifact, driver, err := a.getArtifactAndDriver(ctx, nodeId, artifactName, false, wf, fileName)
+	isInput := false
+	if direction == "inputs" {
+		isInput = true
+	}
+
+	artifact, driver, err := a.getArtifactAndDriver(ctx, nodeId, artifactName, isInput, wf, fileName)
 	if err != nil {
 		a.serverInternalError(err, w)
 		return
