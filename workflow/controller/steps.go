@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Knetic/govaluate"
@@ -473,7 +472,7 @@ func (woc *wfOperationCtx) resolveReferences(stepGroup []wfv1.WorkflowStep, scop
 
 	//parallelStepNum := make(chan string, 500)
 	var resolveReferenceError error
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	for i, step := range stepGroup {
 		if err := resolveStepReferences(i, &step, newStepGroup); err != nil {
 			woc.log.WithFields(log.Fields{"stepName": step.Name}).WithError(err).Error(err.Error())
