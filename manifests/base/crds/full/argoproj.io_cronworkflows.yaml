@@ -831,6 +831,13 @@ spec:
                                   type: string
                                 createBucketIfNotPresent:
                                   type: boolean
+                                encryptionOptions:
+                                  properties:
+                                    kmsKeyId:
+                                      type: string
+                                    sseAlgorithm:
+                                      type: string
+                                  type: object
                                 endpoint:
                                   type: string
                                 key:
@@ -1482,6 +1489,13 @@ spec:
                                         type: string
                                       createBucketIfNotPresent:
                                         type: boolean
+                                      encryptionOptions:
+                                        properties:
+                                          kmsKeyId:
+                                            type: string
+                                          sseAlgorithm:
+                                            type: string
+                                        type: object
                                       endpoint:
                                         type: string
                                       key:
@@ -2709,6 +2723,13 @@ spec:
                                 type: string
                               createBucketIfNotPresent:
                                 type: boolean
+                              encryptionOptions:
+                                properties:
+                                  kmsKeyId:
+                                    type: string
+                                  sseAlgorithm:
+                                    type: string
+                                type: object
                               endpoint:
                                 type: string
                               key:
@@ -4492,6 +4513,13 @@ spec:
                                                 type: string
                                               createBucketIfNotPresent:
                                                 type: boolean
+                                              encryptionOptions:
+                                                properties:
+                                                  kmsKeyId:
+                                                    type: string
+                                                  sseAlgorithm:
+                                                    type: string
+                                                type: object
                                               endpoint:
                                                 type: string
                                               key:
@@ -5091,6 +5119,13 @@ spec:
                                                       type: string
                                                     createBucketIfNotPresent:
                                                       type: boolean
+                                                    encryptionOptions:
+                                                      properties:
+                                                        kmsKeyId:
+                                                          type: string
+                                                        sseAlgorithm:
+                                                          type: string
+                                                      type: object
                                                     endpoint:
                                                       type: string
                                                     key:
@@ -5741,6 +5776,13 @@ spec:
                                         type: string
                                       createBucketIfNotPresent:
                                         type: boolean
+                                      encryptionOptions:
+                                        properties:
+                                          kmsKeyId:
+                                            type: string
+                                          sseAlgorithm:
+                                            type: string
+                                        type: object
                                       endpoint:
                                         type: string
                                       key:
@@ -6959,6 +7001,13 @@ spec:
                                       type: string
                                     createBucketIfNotPresent:
                                       type: boolean
+                                    encryptionOptions:
+                                      properties:
+                                        kmsKeyId:
+                                          type: string
+                                        sseAlgorithm:
+                                          type: string
+                                      type: object
                                     endpoint:
                                       type: string
                                     key:
@@ -7649,6 +7698,13 @@ spec:
                                       type: string
                                     createBucketIfNotPresent:
                                       type: boolean
+                                    encryptionOptions:
+                                      properties:
+                                        kmsKeyId:
+                                          type: string
+                                        sseAlgorithm:
+                                          type: string
+                                      type: object
                                     endpoint:
                                       type: string
                                     key:
@@ -8259,6 +8315,13 @@ spec:
                                         type: string
                                       createBucketIfNotPresent:
                                         type: boolean
+                                      encryptionOptions:
+                                        properties:
+                                          kmsKeyId:
+                                            type: string
+                                          sseAlgorithm:
+                                            type: string
+                                        type: object
                                       endpoint:
                                         type: string
                                       key:
@@ -11195,6 +11258,13 @@ spec:
                                   type: string
                                 createBucketIfNotPresent:
                                   type: boolean
+                                encryptionOptions:
+                                  properties:
+                                    kmsKeyId:
+                                      type: string
+                                    sseAlgorithm:
+                                      type: string
+                                  type: object
                                 endpoint:
                                   type: string
                                 key:
@@ -12978,6 +13048,13 @@ spec:
                                                   type: string
                                                 createBucketIfNotPresent:
                                                   type: boolean
+                                                encryptionOptions:
+                                                  properties:
+                                                    kmsKeyId:
+                                                      type: string
+                                                    sseAlgorithm:
+                                                      type: string
+                                                  type: object
                                                 endpoint:
                                                   type: string
                                                 key:
@@ -13577,6 +13654,13 @@ spec:
                                                         type: string
                                                       createBucketIfNotPresent:
                                                         type: boolean
+                                                      encryptionOptions:
+                                                        properties:
+                                                          kmsKeyId:
+                                                            type: string
+                                                          sseAlgorithm:
+                                                            type: string
+                                                        type: object
                                                       endpoint:
                                                         type: string
                                                       key:
@@ -14227,6 +14311,13 @@ spec:
                                           type: string
                                         createBucketIfNotPresent:
                                           type: boolean
+                                        encryptionOptions:
+                                          properties:
+                                            kmsKeyId:
+                                              type: string
+                                            sseAlgorithm:
+                                              type: string
+                                          type: object
                                         endpoint:
                                           type: string
                                         key:
@@ -15445,6 +15536,13 @@ spec:
                                         type: string
                                       createBucketIfNotPresent:
                                         type: boolean
+                                      encryptionOptions:
+                                        properties:
+                                          kmsKeyId:
+                                            type: string
+                                          sseAlgorithm:
+                                            type: string
+                                        type: object
                                       endpoint:
                                         type: string
                                       key:
@@ -16135,6 +16233,13 @@ spec:
                                         type: string
                                       createBucketIfNotPresent:
                                         type: boolean
+                                      encryptionOptions:
+                                        properties:
+                                          kmsKeyId:
+                                            type: string
+                                          sseAlgorithm:
+                                            type: string
+                                        type: object
                                       endpoint:
                                         type: string
                                       key:
@@ -16745,6 +16850,13 @@ spec:
                                           type: string
                                         createBucketIfNotPresent:
                                           type: boolean
+                                        encryptionOptions:
+                                          properties:
+                                            kmsKeyId:
+                                              type: string
+                                            sseAlgorithm:
+                                              type: string
+                                          type: object
                                         endpoint:
                                           type: string
                                         key:

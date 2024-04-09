@@ -2898,7 +2898,32 @@ type OSSBucket struct {
 
 	// UseSDKCreds tells the driver to figure out credentials based on sdk defaults.
 	UseSDKCreds bool `json:"useSDKCreds,omitempty" protobuf:"varint,8,opt,name=useSDKCreds"`
+
+	EncryptionOptions *OSSEncryptionOptions `json:"encryptionOptions,omitempty" protobuf:"bytes,10,opt,name=encryptionOptions"`
 }
+
+// OSSEncryptionOptions used to determine encryption options during OSS operations
+type OSSEncryptionOptions struct {
+	// SSEAlgorithm specifies the encryption algorithm used to encrypt the object.
+	SSEAlgorithm OSSEncryptionAlgorithm `json:"sseAlgorithm,omitempty" protobuf:"bytes,1,opt,name=sseAlgorithm"`
+
+	// KMSKeyID tells the driver to encrypt the object using the specified KMS Key, instead the default KMS Key managed by OSS server. Only works when SSEAlgorithm is set to KMS.
+	KMSKeyID string `json:"kmsKeyId,omitempty" protobuf:"bytes,2,opt,name=kmsKeyId"`
+}
+
+// Refer to
+type OSSEncryptionAlgorithm string
+
+const (
+	// Aes256OssEncryptionAlgorithm tells the driver to encrypt the object with SSE-OSS algorithm.
+	Aes256OssEncryptionAlgorithm OSSEncryptionAlgorithm = "AES256"
+
+	// Sm4OssEncryptionAlgorithm tells the driver to encrypt the object with SM4 algorithm.
+	Sm4OssEncryptionAlgorithm OSSEncryptionAlgorithm = "SM4"
+
+	// KmsOssEncryptionAlgorithm tells the driver to encrypt the object with SSE-KMS algorithm.
+	KmsOssEncryptionAlgorithm OSSEncryptionAlgorithm = "KMS"
+)
 
 // OSSArtifact is the location of an Alibaba Cloud OSS artifact
 type OSSArtifact struct {

@@ -2713,12 +2713,46 @@ save/load the directory appropriately.
 | accessKeySecret | [SecretKeySelector](#secret-key-selector)| `SecretKeySelector` |  | |  |  |
 | bucket | string| `string` |  | | Bucket is the name of the bucket |  |
 | createBucketIfNotPresent | boolean| `bool` |  | | CreateBucketIfNotPresent tells the driver to attempt to create the OSS bucket for output artifacts, if it doesn't exist |  |
+| encryptionOptions | [OSSEncryptionOptions](#o-s-s-encryption-options)| `OSSEncryptionOptions` |  | |  |  |
 | endpoint | string| `string` |  | | Endpoint is the hostname of the bucket endpoint |  |
 | key | string| `string` |  | | Key is the path in the bucket where the artifact resides |  |
 | lifecycleRule | [OSSLifecycleRule](#o-s-s-lifecycle-rule)| `OSSLifecycleRule` |  | |  |  |
 | secretKeySecret | [SecretKeySelector](#secret-key-selector)| `SecretKeySelector` |  | |  |  |
 | securityToken | string| `string` |  | | SecurityToken is the user's temporary security token. For more details, check out: https://www.alibabacloud.com/help/doc-detail/100624.htm |  |
 | useSDKCreds | boolean| `bool` |  | | UseSDKCreds tells the driver to figure out credentials based on sdk defaults. |  |
+
+
+
+### <span id="o-s-s-encryption-algorithm"></span> OSSEncryptionAlgorithm
+
+
+> Refer to
+  
+
+
+
+| Name | Type | Go type | Default | Description | Example |
+|------|------|---------| ------- |-------------|---------|
+| OSSEncryptionAlgorithm | string| string | | Refer to |  |
+
+
+
+### <span id="o-s-s-encryption-options"></span> OSSEncryptionOptions
+
+
+> OSSEncryptionOptions used to determine encryption options during OSS operations
+  
+
+
+
+
+
+**Properties**
+
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| kmsKeyId | string| `string` |  | | KMSKeyID tells the driver to encrypt the object using the specified KMS Key, instead the default KMS Key managed by OSS server. Only works when SSEAlgorithm is set to KMS. |  |
+| sseAlgorithm | [OSSEncryptionAlgorithm](#o-s-s-encryption-algorithm)| `OSSEncryptionAlgorithm` |  | |  |  |
 
 
 
