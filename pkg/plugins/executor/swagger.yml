@@ -2317,6 +2317,8 @@ definitions:
         description: CreateBucketIfNotPresent tells the driver to attempt to create
           the OSS bucket for output artifacts, if it doesn't exist
         type: boolean
+      encryptionOptions:
+        $ref: '#/definitions/OSSEncryptionOptions'
       endpoint:
         description: Endpoint is the hostname of the bucket endpoint
         type: string
@@ -2335,6 +2337,21 @@ definitions:
         description: UseSDKCreds tells the driver to figure out credentials based
           on sdk defaults.
         type: boolean
+    type: object
+  OSSEncryptionAlgorithm:
+    description: Refer to
+    type: string
+  OSSEncryptionOptions:
+    description: OSSEncryptionOptions used to determine encryption options during
+      OSS operations
+    properties:
+      kmsKeyId:
+        description: KMSKeyID tells the driver to encrypt the object using the specified
+          KMS Key, instead the default KMS Key managed by OSS server. Only works when
+          SSEAlgorithm is set to KMS.
+        type: string
+      sseAlgorithm:
+        $ref: '#/definitions/OSSEncryptionAlgorithm'
     type: object
   OSSLifecycleRule:
     description: OSSLifecycleRule specifies how to manage bucket's lifecycle
