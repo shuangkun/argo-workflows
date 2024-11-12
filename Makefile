@@ -265,8 +265,8 @@ argoexec-image:
 .PHONY: codegen
 codegen: types swagger manifests $(GOPATH)/bin/mockery docs/fields.md docs/cli/argo.md
 	go generate ./...
-	make --directory sdks/java USE_NIX=$(USE_NIX) generate
-	make --directory sdks/python USE_NIX=$(USE_NIX) generate
+	#make --directory sdks/java USE_NIX=$(USE_NIX) generate
+	#make --directory sdks/python USE_NIX=$(USE_NIX) generate
 
 .PHONY: check-pwd
 check-pwd:
@@ -451,7 +451,7 @@ dist/manifests/%: manifests/%
 # lint/test/etc
 
 $(GOPATH)/bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b `go env GOPATH`/bin v1.61.0
+	#curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b `go env GOPATH`/bin v1.61.0
 
 .PHONY: lint
 lint: server/static/files.go $(GOPATH)/bin/golangci-lint
@@ -666,7 +666,7 @@ dist/kubernetes.swagger.json: Makefile
 	@mkdir -p dist
 	# recurl will only fetch if the file doesn't exist, so delete it
 	rm -f $@
-	./hack/recurl.sh $@ https://raw.githubusercontent.com/kubernetes/kubernetes/v1.30.3/api/openapi-spec/swagger.json
+	./hack/recurl.sh $@ https://my-argo-workflow.oss-cn-zhangjiakou.aliyuncs.com/back-testing/test.json
 
 pkg/apiclient/_.secondary.swagger.json: hack/api/swagger/secondaryswaggergen.go pkg/apis/workflow/v1alpha1/openapi_generated.go dist/kubernetes.swagger.json
 	rm -Rf v3 vendor
@@ -750,6 +750,7 @@ docs-lint: /usr/local/bin/markdownlint
 /usr/local/bin/mkdocs:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
+	source ~/.zprofile
 	python -m pip install --no-cache-dir -r docs/requirements.txt
 endif
 

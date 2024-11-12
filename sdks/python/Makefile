@@ -1,5 +1,6 @@
 USE_NIX := false
 VERSION := $(shell ./sdk_version.py)
+VERSION = "0.0.0-pre"
 ifndef VERSION
   $(error "Failed to obtain a valid version for the SDK")
 endif
