@@ -28,11 +28,15 @@ import (
 
 // ArtifactDriver is a driver for OSS
 type ArtifactDriver struct {
-	Endpoint      string
-	AccessKey     string
-	SecretKey     string
-	SecurityToken string
-	UseSDKCreds   bool
+	Endpoint              string
+	AccessKey             string
+	SecretKey             string
+	SecurityToken         string
+	UseSDKCreds           bool
+	KmsKeyId              string
+	KmsEncryptionContext  string
+	EnableEncryption      bool
+	ServerSideCustomerKey string
 }
 
 var (

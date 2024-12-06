@@ -238,6 +238,23 @@ func newDriver(ctx context.Context, art *wfv1.Artifact, ri resource.Interface) (
 			SecurityToken: art.OSS.SecurityToken,
 			UseSDKCreds:   art.OSS.UseSDKCreds,
 		}
+
+		if art.OSS.EncryptionOptions != nil {
+			driver.KmsKeyId = art.OSS.EncryptionOptions.KmsKeyId
+			driver.KmsEncryptionContext = art.OSS.EncryptionOptions.KmsEncryptionContext
+			driver.EnableEncryption = art.OSS.EncryptionOptions.EnableEncryption
+			if art.OSS.EncryptionOptions.ServerSideCustomerKeySecret != nil {
+				if art.OSS.EncryptionOptions.KmsKeyId != "" {
+					return nil, fmt.Errorf("serverSideCustomerKeySecret and kmsKeyId cannot be set together")
+				}
+
+				serverSideCustomerKeyBytes, err := ri.GetSecret(ctx, art.OSS.EncryptionOptions.ServerSideCustomerKeySecret.Name, art.OSS.EncryptionOptions.ServerSideCustomerKeySecret.Key)
+				if err != nil {
+					return nil, err
+				}
+				driver.ServerSideCustomerKey = serverSideCustomerKeyBytes
+			}
+		}
 		return &driver, nil
 	}
 

@@ -2934,6 +2934,9 @@ type OSSBucket struct {
 
 	// UseSDKCreds tells the driver to figure out credentials based on sdk defaults.
 	UseSDKCreds bool `json:"useSDKCreds,omitempty" protobuf:"varint,8,opt,name=useSDKCreds"`
+
+	// EncryptionOptions specifies how to encrypt data in the bucket
+	EncryptionOptions *OSSEncryptionOptions `json:"oSSEncryptionOptions,omitempty" protobuf:"bytes,10,opt,name=encryptionOptions"`
 }
 
 // OSSArtifact is the location of an Alibaba Cloud OSS artifact
@@ -2951,6 +2954,20 @@ type OSSLifecycleRule struct {
 
 	// MarkDeletionAfterDays is the number of days before we delete objects in the bucket
 	MarkDeletionAfterDays int32 `json:"markDeletionAfterDays,omitempty" protobuf:"varint,2,opt,name=markDeletionAfterDays"`
+}
+
+type OSSEncryptionOptions struct {
+	// KMSKeyId tells the driver to encrypt the object using the specified KMS Key.
+	KmsKeyId string `json:"kmsKeyId,omitempty" protobuf:"bytes,1,opt,name=kmsKeyId"`
+
+	// KmsEncryptionContext is a json blob that contains an encryption context.
+	KmsEncryptionContext string `json:"kmsEncryptionContext,omitempty" protobuf:"bytes,2,opt,name=kmsEncryptionContext"`
+
+	// EnableEncryption tells the driver to encrypt objects if set to true. If kmsKeyId and serverSideCustomerKeySecret are not set, SSE-S3 will be used
+	EnableEncryption bool `json:"enableEncryption,omitempty" protobuf:"varint,3,opt,name=enableEncryption"`
+
+	// ServerSideCustomerKeySecret tells the driver to encrypt the output artifacts using SSE-C with the specified secret.
+	ServerSideCustomerKeySecret *apiv1.SecretKeySelector `json:"serverSideCustomerKeySecret,omitempty" protobuf:"bytes,4,opt,name=serverSideCustomerKeySecret"`
 }
 
 func (o *OSSArtifact) GetKey() (string, error) {
