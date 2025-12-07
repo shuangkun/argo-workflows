@@ -554,15 +554,18 @@ func (r *workflowArchive) GetWorkflow(ctx context.Context, uid string, namespace
 					"namespace": namespace,
 					"name":      name,
 					"num":       num,
-				}).Debug(ctx, "returning latest of archived workflows")
+				}).Warn(ctx, "multiple archived workflows found with same name and namespace, returning the most recent one. This may occur when workflow name random suffix collisions happen at scale.")
 			}
+			// Order by startedat desc, then uid desc to ensure deterministic ordering
+			// This handles cases where multiple workflows have the same name due to
+			// Kubernetes 5-character random suffix collisions (26^5 = 11,881,376 possible combinations)
 			err = r.session.SQL().
 				Select("workflow").
 				From(archiveTableName).
 				Where(r.clusterManagedNamespaceAndInstanceID()).
 				And(namespaceEqual(namespace)).
 				And(nameEqual(name)).
-				OrderBy("-startedat").
+				OrderBy("-startedat", "-uid").
 				One(archivedWf)
 		} else {
 			return nil, sutils.ToStatusError(fmt.Errorf("both name and namespace are required if uid is not specified"), codes.InvalidArgument)
