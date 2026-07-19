@@ -445,6 +445,15 @@ func (woc *wfOperationCtx) operate(ctx context.Context) {
 
 	var onExitNode *wfv1.NodeStatus
 	if woc.execWf.Spec.HasExitHook() {
+		// The global onExit handler resolves {{workflow.outputs.artifacts.*}} from the global
+		// scope, which is populated from task results during taskResultReconciliation() at the
+		// start of operate(). If any task result is still in progress, its outputs may not be in
+		// scope yet, so wait until all task results are reported before running the onExit handler.
+		if woc.checkTaskResultsInProgress(ctx) {
+			woc.log.Info(ctx, "Waiting for task results to complete before executing global onExit handler")
+			woc.requeueAfter(GetRequeueTime())
+			return
+		}
 		woc.log.WithField("onExit", woc.execWf.Spec.OnExit).Info(ctx, "Running OnExit handler")
 		onExitNodeName := common.GenerateOnExitNodeName(woc.wf.Name)
 		onExitNode, _ = woc.execWf.GetNodeByName(onExitNodeName)

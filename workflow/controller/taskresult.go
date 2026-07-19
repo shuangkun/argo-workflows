@@ -131,6 +131,12 @@ func (woc *wfOperationCtx) taskResultReconciliation(ctx context.Context) {
 				WithField("nodeID", nodeID).
 				Debug(ctx, "task-result changed")
 			woc.wf.Status.Nodes.Set(ctx, nodeID, *newNode)
+			// Sync task-result outputs into the global scope so that
+			// {{workflow.outputs.artifacts.*}} / {{workflow.outputs.parameters.*}} are
+			// available to the global onExit handler, which runs later in this operate() cycle.
+			if newNode.Outputs != nil && newNode.Outputs.HasOutputs() {
+				woc.addOutputsToGlobalScope(ctx, newNode.Outputs)
+			}
 			woc.updated = true
 		}
 	}
