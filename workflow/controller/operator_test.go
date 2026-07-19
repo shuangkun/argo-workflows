@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -748,6 +749,55 @@ func TestProcessNodeRetriesOnTransientErrors(t *testing.T) {
 	n, _, err = woc.processNodeRetries(ctx, n, retries, &executeTemplateOpts{})
 	require.NoError(t, err)
 	assert.Equal(t, wfv1.NodeError, n.Phase)
+}
+
+// TestProcessNodeRetriesWorkflowDeadlineOnExitExemption ensures the workflow ActiveDeadlineSeconds
+// does not block template retries for on-exit handlers, consistent with on-exit pods that are
+// exempt from the deadline. Non-on-exit templates must still be failed once the deadline passes.
+func TestProcessNodeRetriesWorkflowDeadlineOnExitExemption(t *testing.T) {
+	cancel, controller := newController(logging.TestContext(t.Context()))
+	defer cancel()
+
+	buildWoc := func(t *testing.T) (*wfOperationCtx, *wfv1.NodeStatus, wfv1.RetryStrategy, context.Context) {
+		t.Helper()
+		ctx := logging.TestContext(t.Context())
+		wf := wfv1.MustUnmarshalWorkflow(helloWorldWf)
+		woc := newWorkflowOperationCtx(ctx, wf, controller)
+		past := time.Now().UTC().Add(-time.Hour)
+		woc.workflowDeadline = &past
+
+		retries := wfv1.RetryStrategy{}
+		retries.Limit = intstrutil.ParsePtr("2")
+		retries.RetryPolicy = wfv1.RetryPolicyOnFailure
+
+		nodeName := "test-node"
+		nodeID := woc.wf.NodeID(nodeName)
+		_, node := woc.initializeNode(ctx, nodeName, wfv1.NodeTypeRetry, "", &wfv1.WorkflowStep{}, "", wfv1.NodeRunning, &wfv1.NodeFlag{}, true)
+		woc.wf.Status.Nodes[nodeID] = *node
+
+		childNode := fmt.Sprintf("%s(0)", nodeName)
+		woc.initializeNode(ctx, childNode, wfv1.NodeTypePod, "", &wfv1.WorkflowStep{}, "", wfv1.NodeFailed, &wfv1.NodeFlag{Retried: true}, true)
+		woc.addChildNode(ctx, nodeName, childNode)
+
+		n, err := woc.wf.GetNodeByName(nodeName)
+		require.NoError(t, err)
+		return woc, n, retries, ctx
+	}
+
+	t.Run("non-on-exit template fails after deadline", func(t *testing.T) {
+		woc, n, retries, ctx := buildWoc(t)
+		n, _, err := woc.processNodeRetries(ctx, n, retries, &executeTemplateOpts{})
+		require.NoError(t, err)
+		assert.Equal(t, wfv1.NodeFailed, n.Phase)
+		assert.Contains(t, n.Message, "retry exceeded workflow deadline")
+	})
+
+	t.Run("on-exit template retries despite deadline", func(t *testing.T) {
+		woc, n, retries, ctx := buildWoc(t)
+		n, _, err := woc.processNodeRetries(ctx, n, retries, &executeTemplateOpts{onExitTemplate: true})
+		require.NoError(t, err)
+		assert.NotContains(t, n.Message, "retry exceeded workflow deadline")
+	})
 }
 
 func TestProcessNodeRetriesWithBackoff(t *testing.T) {

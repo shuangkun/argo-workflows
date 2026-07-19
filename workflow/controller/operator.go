@@ -1017,7 +1017,13 @@ func (woc *wfOperationCtx) processNodeRetries(ctx context.Context, node *wfv1.No
 		return woc.markNodePhase(ctx, node.Name, wfv1.NodeSucceeded), true, nil
 	}
 
-	if woc.GetShutdownStrategy().Enabled() || (woc.workflowDeadline != nil && time.Now().UTC().After(*woc.workflowDeadline)) {
+	// Match workflowpod/exec_control: on-exit pods are not cut off by ActiveDeadlineSeconds, so
+	// their template retries should not fail with "retry exceeded workflow deadline" either.
+	workflowDeadlineExceeded := woc.workflowDeadline != nil && time.Now().UTC().After(*woc.workflowDeadline)
+	if opts != nil && opts.onExitTemplate {
+		workflowDeadlineExceeded = false
+	}
+	if woc.GetShutdownStrategy().Enabled() || workflowDeadlineExceeded {
 		var message string
 		if woc.GetShutdownStrategy().Enabled() {
 			message = fmt.Sprintf("Stopped with strategy '%s'", woc.GetShutdownStrategy())
