@@ -266,7 +266,12 @@ func (s *prioritySemaphore) tryAcquire(ctx context.Context, holderKey string, tx
 	}
 	acquired, _ := s.acquire(ctx, holderKey, tx)
 	if acquired {
-		s.pending.pop()
+		// Remove this holder from the queue explicitly. Popping the head is wrong:
+		// checkAcquire lets a request through when the queue head belongs to the same
+		// workflow (isSameWorkflowNodeKeys matches on workflow name only), so under
+		// template fan-out the head can be a different node than holderKey. Popping it
+		// would evict an innocent waiter and leave holderKey behind as a stale ghost.
+		s.pending.remove(holderKey)
 		limit := s.getLimit(ctx)
 		logger.WithFields(logging.Fields{
 			"name":      s.name,

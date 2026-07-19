@@ -134,6 +134,35 @@ func TestTryAcquireSemaphore(t *testing.T) {
 	}
 }
 
+// TestTryAcquireDoesNotEvictSameWorkflowQueueHead is a regression test for template
+// semaphore starvation. checkAcquire admits a request whose workflow matches the queue
+// head (isSameWorkflowNodeKeys compares the workflow name only), so under template
+// fan-out the head can be a different node than the acquiring holderKey. tryAcquire must
+// dequeue the acquiring holderKey, not blindly pop the head; otherwise an innocent waiter
+// is evicted and the real acquirer lingers in the queue as a stale ghost entry.
+func TestTryAcquireDoesNotEvictSameWorkflowQueueHead(t *testing.T) {
+	ctx := logging.TestContext(t.Context())
+	nextWorkflow := func(string) {}
+	sem, err := newInternalSemaphore(ctx, "default/ConfigMap/my-config/workflow", nextWorkflow, func(context.Context, string) (int, error) { return 1, nil }, 0)
+	require.NoError(t, err)
+
+	now := time.Now()
+	head := "default/wf-1/node-A"
+	acquirer := "default/wf-1/node-B"
+	require.NoError(t, sem.addToQueue(ctx, head, 0, now))
+	require.NoError(t, sem.addToQueue(ctx, acquirer, 0, now.Add(time.Second)))
+
+	// node-B acquires while node-A is the queue head (same workflow, different node).
+	acquired, _, err := sem.tryAcquire(ctx, acquirer, nil)
+	require.NoError(t, err)
+	require.True(t, acquired)
+
+	pending, err := sem.getCurrentPending(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, pending, head, "the innocent queue head must remain queued")
+	assert.NotContains(t, pending, acquirer, "the acquirer must be removed from the queue")
+}
+
 // testNotifyWaitersAcquire tests the notifyWaiters method for one semaphore implementation
 func testNotifyWaitersAcquire(t *testing.T, factory semaphoreFactory) {
 	t.Helper()
